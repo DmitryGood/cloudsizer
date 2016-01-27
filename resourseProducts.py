@@ -113,7 +113,7 @@ class ResourseFactory():
             #print "   --1- par:%s  ___ line: %s"%(par.group(1), name)
             num = int(par.group(1))
         else:                                               # fail - try more
-            par = re.search('[^0-9]*?([0-9.]+)\s*?TB.*(?=HDD)', name)               # parse second type of lines 1.2 TB ____ HDD
+            par = re.search('[^0-9]*?([0-9.]+)\s*?TB.*(?=HDD|SAS|SATA)', name)               # parse second type of lines 1.2 TB ____ HDD
             if (par):                                           # success
                 #print "   --2- par:%s  ___ line: %s"%(par.group(1), name)
                 group = par.group(1).split('.')
