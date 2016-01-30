@@ -1,21 +1,18 @@
-# project/__init__.py
 
-import re
 import datetime
-import hashlib
 import os
-from flask import Flask, g, request, redirect, url_for
+
+from flask import Flask, redirect
 from flask_sqlalchemy import SQLAlchemy
-from config import WorkConfig
 from werkzeug import secure_filename
 from flask import send_from_directory
 from flask import request, jsonify, json
-from SpecFactory import SpecFactory
-
-
-from model_cloudcalc import Base, User, Category, Specification, Gpl_line, Gpl   # database types
 from sqlalchemy.orm.exc import NoResultFound
-from sqlalchemy.sql import or_
+
+from config import WorkConfig
+from specification.SpecFactory import SpecFactory
+from model_cloudcalc import User  # database types
+
 #from project.textTokenizer import Tokenizer
 
 

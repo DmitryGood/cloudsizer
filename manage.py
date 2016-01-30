@@ -2,15 +2,10 @@
 
 from flask_script import Manager
 #from flask.ext.migrate import Migrate, MigrateCommand
-from flask_sqlalchemy import SQLAlchemy
 #from project import app, db
-from flask import Flask, g
-from model_cloudcalc import Base, User, Specification, Category, Gpl_line, Gpl
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-import os
+from model_cloudcalc import Base, User, Gpl
 from config import WorkConfig
-from GPLFactory import GplFactory
+from specification.GPLFactory import GplFactory
 from flask_APIdefinition import app, db
 #from . import app, db
 

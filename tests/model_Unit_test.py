@@ -1,20 +1,17 @@
 __author__ = 'slash'
 import unittest
-import hashlib
 import os
 
-from flask import Flask
-from sqlalchemy import create_engine, and_, not_, select
+from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.orm.exc import NoResultFound
+
 
 #from project.models import User
-from model_cloudcalc import Base, User, Category, Specification    # database types
+from model_cloudcalc import Base, User  # database types
 from config import TestConfig
 from flask import Flask
 #from GPLFactory import GplFactory
-from resourseProducts import ResourseFactory
-from SpecFactory import SpecFactory
+from specification.SpecFactory import SpecFactory
 
 app = Flask(__name__)
 app.config.from_object(TestConfig)
