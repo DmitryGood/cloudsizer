@@ -6,6 +6,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from model_cloudcalc import Base, Gpl, Gpl_line, Category, Specification
 from resourseProducts import ResourseFactory, price, remove_tags
 from specFileProcessors import xlsSheetProcessor, xlsxSheetProcessor
+from sqlalchemy import and_
 
 
 class SpecFactory():
@@ -99,10 +100,10 @@ class SpecFactory():
             if (hash == None):
                 f = open(filename)
                 data = f.read()
-                self.hash = hashlib.sha1(data).hexdigest()
+                self.file_hash = hashlib.sha1(data).hexdigest()
                 f.close()
             else:
-                self.hash = hash
+                self.file_hash = hash
             if (type == 'xls'):
                 self.book = xlsSheetProcessor(filename)
             elif (type == 'xlsx'):
@@ -161,12 +162,13 @@ class SpecFactory():
         # get tokenized specification from file
         tokenizedSpec = self.extractSpec(self.sheet, self.header, self.footer, self.mapping)
         print 'Tokenize spec and ready to add it'
+        self.spec_hash = hashlib.sha1(self.file_hash + str(user_id)).hexdigest()
         try:
-            spec = session.query(Specification).filter(Specification.hash == self.hash).one()
+            spec = session.query(Specification).filter(Specification.hash == self.spec_hash).one()
             print "already found"
         except:
             try:
-                spec = Specification(self.filename, self.name, tokenizedSpec, self.hash, user_id=user_id)
+                spec = Specification(self.filename, self.name, tokenizedSpec, self.spec_hash, user_id=user_id)
                 session.add(spec)
                 session.commit()
                 print 'added'

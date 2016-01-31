@@ -118,7 +118,7 @@ def api_upload_file():
         #db.session.add(user)
         #db.session.commit()
         # add to filename user's cookies
-        filename = secure_filename(user_session.getCookie() + '_'+file.filename)             # new secure filename with cookie string
+        filename = secure_filename(str(user_session.getUserID()) + '_'+file.filename)             # new secure filename with cookie string
         dest_filename = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         # save specification to disk
         file.save(dest_filename)
@@ -141,7 +141,7 @@ def api_upload_file():
             print "specification factory created"
             hash = spec_factory.uploadSpecToDatabase(db.session, user_session.getUserID())
             print "Spec hash: '%s', return success"%hash
-            user_session.registerEvent(db.session,User_action.UPLOAD_SPEC, request, data={'hash': hash})    # register spec upload
+            user_session.registerEvent(db.session,User_action.UPLOAD_SPEC, request, data={'filename' : dest_filename, 'hash': hash})    # register spec upload
             resp = make_response(jsonify({'result' : True, 'hash' : hash}), 200)
         except Exception as e:
             print "Exceptions happens: ", e

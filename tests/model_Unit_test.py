@@ -71,7 +71,7 @@ class MyTest(unittest.TestCase):
         print "Dir: ", self.basedir
         filename = self.basedir+'/data/BillOfMaterials_14714923.xls'
         spec_factory = SpecFactory(filename)
-        self.assertTrue(spec_factory.hash !=None)
+        self.assertTrue(spec_factory.file_hash !=None)
         hash = spec_factory.uploadSpecToDatabase(self.session,user)
 
         result = spec_factory.calculateSpecResources(self.session, hash)
