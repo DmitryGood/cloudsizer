@@ -36,10 +36,12 @@ class UserSession:
         self.user = user
         # If user doesn't exist - fill all parameters and save
         # If user didn't exist - fix registration event
+        self.toSetKey = False
         if (not exists):
             event = User_action(user.id, User_action.REGISTER, ip, False)
             dbSession.add(event)
             dbSession.commit()
+            self.toSetKey = True
         else:
             # Check for session key
             session_key = request.cookies.get(UserSession.KEY)
@@ -48,8 +50,6 @@ class UserSession:
                 dbSession.add(event)
                 dbSession.commit()
                 self.toSetKey = True
-            else:
-                self.toSetKey = False
         # User is now in database, event registered
 
 
