@@ -40,16 +40,16 @@ class UserSession:
             event = User_action(user.id, User_action.REGISTER, ip, False)
             dbSession.add(event)
             dbSession.commit()
-
-        # Check for session key
-        session_key = request.cookies.get(UserSession.KEY)
-        if (not session_key):
-            event = User_action(user.id, User_action.CONNECT, ip, True)
-            dbSession.add(event)
-            dbSession.commit()
-            self.toSetKey = True
         else:
-            self.toSetKey = False
+            # Check for session key
+            session_key = request.cookies.get(UserSession.KEY)
+            if (not session_key):
+                event = User_action(user.id, User_action.CONNECT, ip, True)
+                dbSession.add(event)
+                dbSession.commit()
+                self.toSetKey = True
+            else:
+                self.toSetKey = False
         # User is now in database, event registered
 
 
