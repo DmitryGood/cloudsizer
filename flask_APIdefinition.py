@@ -2,7 +2,7 @@
 import datetime
 import os
 
-from flask import Flask, redirect
+from flask import Flask, redirect, make_response
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug import secure_filename
 from flask import send_from_directory
@@ -11,7 +11,8 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from config import WorkConfig
 from specification.SpecFactory import SpecFactory
-from model_cloudcalc import User  # database types
+from model_cloudcalc import User, User_action  # database types
+from users.userRegistrator import UserSession
 
 #from project.textTokenizer import Tokenizer
 
@@ -56,14 +57,18 @@ def allowed_file(filename):
 @app.route('/upload', methods=['POST'])
 def upload_file():
     file = request.files['file']
+    user_session = UserSession(db.session, request)         # create user session
     if file and allowed_file(file.filename):
         # get user's credentials and save him
-        ip_addr = request.remote_addr
-        user = User(None, User.USER_ROLE_USER,{'ip': ip_addr})
-        db.session.add(user)
-        db.session.commit()
+
+        #ip_addr = request.remote_addr
+        #user = User(None, User.USER_ROLE_USER,{'ip': ip_addr})
+        #db.session.add(user)
+        #db.session.commit()
+        # user added - this part should be changed to registration
+
         # add to filename user's cookies
-        filename = secure_filename(user.cookie + '_'+file.filename)             # new secure filename with cookie string
+        filename = secure_filename(user_session.getCookie() + '_'+file.filename)             # new secure filename with cookie string
         dest_filename = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         # save specification to disk
         file.save(dest_filename)
@@ -75,26 +80,30 @@ def upload_file():
         log.write("%s : upload file: %s, from user: %s, IP: %s\n"%(
             datetime.datetime.now(),
             filename,
-            user.id,
-            ip_addr
+            user_session.getUserID(),
+            request.remote_addr
         ))
 
         # Load specification to database
         try:
             spec_factory = SpecFactory(dest_filename)
             print "specification factory created"
-            hash = spec_factory.uploadSpecToDatabase(db.session,user)
+            hash = spec_factory.uploadSpecToDatabase(db.session, user_session.getUserID())
             print "Spec hash: '%s', redirecting"%hash
-            return redirect('#/specification/' + hash)
+            resp = make_response(redirect('#/specification/' + hash))
         except Exception as e:
             print "Exceptions happens: ", e
-            return redirect('/'), 404           # Add exception handler - redirect to bug report page. /#/bugreport/ par:{filename :}
-    return redirect('/'), 404
+            resp = make_response(redirect('/'), 404)           # Add exception handler - redirect to bug report page. /#/bugreport/ par:{filename :}
+    else:
+        resp = make_response(redirect('/'), 404)
+    user_session.setCookies(resp)
+    return resp
 
 
 @app.route('/api/upload', methods=['POST'])
 def api_upload_file():
     file = request.files['file']
+    user_session = UserSession(db.session, request)         # create user session
     try:                                # Try to get name from request
         param = request.form['data']
         jsonObject = json.loads(param)
@@ -104,12 +113,12 @@ def api_upload_file():
     if file and allowed_file(file.filename):
         print ('--------->>>>>> Upload file through API call:')
         # get user's credentials and save him
-        ip_addr = request.remote_addr
-        user = User(None, User.USER_ROLE_USER,{'ip': ip_addr})
-        db.session.add(user)
-        db.session.commit()
+        #ip_addr = request.remote_addr
+        #user = User(None, User.USER_ROLE_USER,{'ip': ip_addr})
+        #db.session.add(user)
+        #db.session.commit()
         # add to filename user's cookies
-        filename = secure_filename(user.cookie + '_'+file.filename)             # new secure filename with cookie string
+        filename = secure_filename(user_session.getCookie() + '_'+file.filename)             # new secure filename with cookie string
         dest_filename = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         # save specification to disk
         file.save(dest_filename)
@@ -121,8 +130,8 @@ def api_upload_file():
         log.write("%s : upload file: %s, from user: %s, IP: %s\n"%(
             datetime.datetime.now(),
             filename,
-            user.id,
-            ip_addr
+            user_session.getUserID(),
+            request.remote_addr
         ))
 
         # Load specification to database
@@ -130,16 +139,18 @@ def api_upload_file():
             print "Spec name: ", name
             spec_factory = SpecFactory(dest_filename, specName=name)
             print "specification factory created"
-            hash = spec_factory.uploadSpecToDatabase(db.session,user)
+            hash = spec_factory.uploadSpecToDatabase(db.session, user_session.getUserID())
             print "Spec hash: '%s', return success"%hash
-            #return redirect('#/specification/' + hash)
-            return jsonify({'result' : True, 'hash' : hash}), 200
+            user_session.registerEvent(db.session,User_action.UPLOAD_SPEC, request, data={'hash': hash})    # register spec upload
+            resp = make_response(jsonify({'result' : True, 'hash' : hash}), 200)
         except Exception as e:
             print "Exceptions happens: ", e
-            #return redirect('/'), 404           # Add exception handler - redirect to bug report page. /#/bugreport/ par:{filename :}
-            return jsonify({'result' : False, 'message' : 'Upload failed'}), 404
-    return jsonify({'result' : False, 'message' : 'File not allowed'}), 404
-    #return redirect('/'), 404
+            resp = make_response({'result' : False, 'message' : 'Upload failed'}, 404)
+    else:
+        resp = make_response(jsonify({'result' : False, 'message' : 'File is not allowed'}), 404)
+    user_session.setCookies(resp)
+    return resp
+
 
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
@@ -153,6 +164,8 @@ def uploaded_file(filename):
 @app.route('/api/specification/<hash>', methods=['GET'])
 def get_specification(hash):
     print "Got parameter: ", hash
+    user_session = UserSession(db.session, request)         # create user session
+    user_session.registerEvent(db.session, User_action.FIND_SPEC,request,data={'hash' : hash})
     result = SpecFactory.calculateSpecResources(db.session, hash)
     return jsonify({'result': True, 'data': result}), 200
 

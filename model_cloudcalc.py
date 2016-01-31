@@ -51,15 +51,18 @@ class Specification(Base):
     name = Column(String(100))
     tokenized = Column(PickleType, nullable=False)
     hash = Column(String(100))
-    user_id = Column(Integer, ForeignKey('user.id'))
+    user_id = Column(Integer, ForeignKey('user.id'), nullable=False)
     user = relationship('User', uselist = False)
 
-    def __init__(self, filename, name, tokenized, hash, user):
+    def __init__(self, filename, name, tokenized, hash, user_id =None, user = None):
         self.filename = filename
         self.name = name
         self.tokenized = tokenized
         self.hash = hash
-        self.user = user
+        if (user_id):
+            self.user_id = user_id
+        if (user):
+            self.user = user
         self.created = datetime.datetime.now()
 
 # Tables to store pricelist
@@ -116,3 +119,35 @@ class Gpl(Base):
         self.filename = filename
         self.tag = tag
         self.created = datetime.datetime.now()
+
+class User_action(Base):
+    __tablename__ = 'user_action'
+    ''' Table for tracking user activity
+        user - user data
+        time - time of the event
+        action - user action from the list
+        ip - IP of connection
+        repeated - False if the first connection, True, if repeated (user had cookie already)
+        data - additional data (uploaded file name, etc.)
+    '''
+    REGISTER = 100
+    CONNECT = 200
+    UPLOAD_SPEC = 300
+    FIND_SPEC = 400
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey('user.id'), nullable=False)
+    user = relationship('User', uselist = False)
+    time = Column(DateTime, nullable=False)
+    action = Column(Integer)
+    ip = Column(String(20))
+    repeated = Column(Boolean)
+    data = Column(PickleType)
+
+    def __init__(self, user_id, action=None, ip=None, repeated=False):
+        self.user_id = user_id
+        self. time = datetime.datetime.now()
+        self.action = action
+        self.ip = ip
+        self.repeated = repeated
+

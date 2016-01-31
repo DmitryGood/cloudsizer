@@ -154,7 +154,7 @@ class SpecFactory():
         return result
 
     ## -------- Public method
-    def uploadSpecToDatabase(self, session, user, spec=None):
+    def uploadSpecToDatabase(self, session, user_id, spec=None):
         ''' Upload specification to database session
         :return: hash for specification file
         '''
@@ -166,7 +166,7 @@ class SpecFactory():
             print "already found"
         except:
             try:
-                spec = Specification(self.filename, self.name, tokenizedSpec, self.hash, user)
+                spec = Specification(self.filename, self.name, tokenizedSpec, self.hash, user_id=user_id)
                 session.add(spec)
                 session.commit()
                 print 'added'
