@@ -272,7 +272,7 @@ class SpecFactory():
                     stat[key] += int(res[key])               # summarize statistics
             result.append(final_line)
             if (line[SpecFactory.CAT_PN] !=''):
-                print "Line: ", line #, type(line[SpecFactory.CAT_PRICE])
+                #print "Line: ", line #, type(line[SpecFactory.CAT_PRICE])
                 p = price(line[SpecFactory.CAT_PRICE])
 
                 #print "item= ", int(line[SpecFactory.CAT_QUANTITY]) * line[SpecFactory.CAT_PRICE]
