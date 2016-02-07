@@ -169,6 +169,23 @@ def get_specification(hash):
     result = SpecFactory.calculateSpecResources(db.session, hash)
     return jsonify({'result': True, 'data': result}), 200
 
+@app.route('/api/registerevent', methods=['POST'])
+def register_event():
+    ''' Function parameter (JSON): event - type of the event
+    :return: user's browser has cookies and session ID
+    '''
+    user_session = UserSession(db.session, request)         # create user session
+    try:                                # Try to get name from request
+        param = request.form['data']
+        jsonObject = json.loads(param)
+        event = jsonObject['event']
+    except:                             # set name to none if can't
+        event = None
+    if (event and event != User_action.REGISTER and event != User_action.CONNECT ):
+        user_session.registerEvent(db.session,event,request,data=jsonObject['eventData'])
+    resp = make_response(jsonify({'result' : True}), 200)
+    user_session.setCookies(resp)
+    return resp
 
 @app.route('/api/register', methods=['POST'])
 def register():

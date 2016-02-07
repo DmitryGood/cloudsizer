@@ -12,9 +12,9 @@ class UserSession:
     KEY = 'sessionKey'
 
     def __init__(self, dbSession, request):
-        user_cookie = request.cookies.get(UserSession.TOKEN)
+        user_cookie = request.cookies.get(UserSession.TOKEN)        # get user TOKEN from cookies
         exists = False
-        if (user_cookie):       # user exists
+        if (user_cookie):       # If browser has cookie - check if such user exists
             try:           # try to find user in database
                 user = dbSession.query(User).filter(User.cookie == user_cookie).one()
                 exists = True
@@ -25,7 +25,7 @@ class UserSession:
             user = User()
         # get connection IP-address
         ip = request.remote_addr
-        if (not exists):
+        if (not exists):                            # if user doesn't exist - add new user to DB
             user.userdata = {'ip' : ip}
             dbSession.add(user)
             dbSession.commit()
