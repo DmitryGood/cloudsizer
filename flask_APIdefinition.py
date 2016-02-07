@@ -176,13 +176,20 @@ def register_event():
     '''
     user_session = UserSession(db.session, request)         # create user session
     try:                                # Try to get name from request
-        param = request.form['data']
-        jsonObject = json.loads(param)
+        #param = request.json
+        jsonObject = request.json
         event = jsonObject['event']
     except:                             # set name to none if can't
         event = None
-    if (event and event != User_action.REGISTER and event != User_action.CONNECT ):
-        user_session.registerEvent(db.session,event,request,data=jsonObject['eventData'])
+        print "Event is None, user session: %s"%(user_session.getUserID())
+    else:
+        if (event and event != User_action.REGISTER and event != User_action.CONNECT ):
+            try:
+                eventData=jsonObject['eventData']
+            except KeyError as e:
+                eventData = None
+            user_session.registerEvent(db.session,event,request,data=eventData)
+            print "registering event %s, with data %s"%(event, eventData)
     resp = make_response(jsonify({'result' : True}), 200)
     user_session.setCookies(resp)
     return resp
