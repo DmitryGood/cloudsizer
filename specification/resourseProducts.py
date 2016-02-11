@@ -15,7 +15,7 @@ def price(inpstr):
 
 TAG_RE = re.compile(r'<[^>]+>')   # constant function
 
-def remove_tags(text):
+def remove_tags(text):          # remove special symbols
     return TAG_RE.sub('', text)
 
 class ResourseFactory():

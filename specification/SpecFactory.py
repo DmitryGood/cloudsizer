@@ -96,8 +96,8 @@ class SpecFactory():
             tmp = filename[filename.rfind('/')+1:]    # use name of the file as a Spec name
             self.name =re.search('.*?_(.+)(?=.xlsx*?)', tmp).group(1)
         else:
-            self.name = remove_tags(specName)
-        type = filename[filename.rfind('.')+1:]
+            self.name = remove_tags(specName)       # remove special symbols
+        type = filename[filename.rfind('.')+1:]     # get file extension
         try:
             if (hash == None):
                 f = open(filename)
@@ -167,7 +167,17 @@ class SpecFactory():
         self.spec_hash = hashlib.sha1(self.file_hash + str(user_id)).hexdigest()
         try:
             spec = session.query(Specification).filter(Specification.hash == self.spec_hash).one()
-            print "already found"
+            print "already found, updating...."
+            try:
+                spec = Specification(self.filename, self.name, tokenizedSpec, self.spec_hash, user_id=user_id)
+                spec.filename =self.filename
+                spec.name = self.name
+                spec.tokenized = tokenizedSpec
+                spec.user_id = user_id
+                session.commit()
+            except:
+                print "Some exception during update: ", e.message
+
         except:
             try:
                 spec = Specification(self.filename, self.name, tokenizedSpec, self.spec_hash, user_id=user_id)
@@ -175,7 +185,7 @@ class SpecFactory():
                 session.commit()
                 print 'added'
             except Exception as e:
-                print "Some exception: ", e.message
+                print "Some exception during add: ", e.message
 
         print 'return hash: ', spec.hash
         return spec.hash
