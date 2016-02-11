@@ -25,6 +25,7 @@ class ResourseFactory():
     PROD_HDD = 'HDD'
     PROD_SSD = 'SSD'
     PROD_BUNDL = 'BUND'
+    PROD_SOCKET = 'SOCKET'
 
 
     # filter for product categories
@@ -73,7 +74,7 @@ class ResourseFactory():
             if par:
                 #print "   --2- par:%s  ___ line: %s"%(par.group(1), name)
                 num = int(par.group(1))
-        return {ResourseFactory.PROD_CPU : num * int(quantity)}
+        return {ResourseFactory.PROD_CPU : num * int(quantity), ResourseFactory.PROD_SOCKET : num} # return number of cores & number of sockets
 
     @staticmethod
     def extractMEMv10(name, quantity, pn=''):

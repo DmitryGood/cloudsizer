@@ -83,7 +83,8 @@ class SpecFactory():
             cell = sheet.cell(header, col)
             if cell.value in self.column_headers:
                 index = self.column_headers.index(cell.value)
-                result[self.column_categories[index]] = col
+                if not result.has_key(self.column_categories[index]):
+                    result[self.column_categories[index]] = col
         print "Category mapping: ", result
         return result
 
@@ -169,7 +170,6 @@ class SpecFactory():
             spec = session.query(Specification).filter(Specification.hash == self.spec_hash).one()
             print "already found, updating...."
             try:
-                spec = Specification(self.filename, self.name, tokenizedSpec, self.spec_hash, user_id=user_id)
                 spec.filename =self.filename
                 spec.name = self.name
                 spec.tokenized = tokenizedSpec
@@ -261,7 +261,8 @@ class SpecFactory():
         stat= {ResourseFactory.PROD_CPU : 0,
                ResourseFactory.PROD_MEM : 0,
                ResourseFactory.PROD_HDD : 0,
-               ResourseFactory.PROD_SSD : 0
+               ResourseFactory.PROD_SSD : 0,
+               ResourseFactory.PROD_SOCKET : 0
                }
         total_price = 0
         spec = SpecFactory.getSpecFromDatabase(session, hash)        # load specification
@@ -291,6 +292,7 @@ class SpecFactory():
         name = SpecFactory.getSpecName(session, hash)
 
         return_data.update({'stat' : stat, 'spec': result, 'price' : total_price, 'name' :name})
+        #print return_data
         return return_data
 
 
