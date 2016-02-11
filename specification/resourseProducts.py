@@ -74,7 +74,7 @@ class ResourseFactory():
             if par:
                 #print "   --2- par:%s  ___ line: %s"%(par.group(1), name)
                 num = int(par.group(1))
-        return {ResourseFactory.PROD_CPU : num * int(quantity), ResourseFactory.PROD_SOCKET : num} # return number of cores & number of sockets
+        return {ResourseFactory.PROD_CPU : num * int(quantity), ResourseFactory.PROD_SOCKET : int(quantity)} # return number of cores & number of sockets
 
     @staticmethod
     def extractMEMv10(name, quantity, pn=''):
