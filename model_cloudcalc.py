@@ -131,9 +131,11 @@ class User_action(Base):
         data - additional data (uploaded file name, etc.)
     '''
     REGISTER = 100
+    OPEN_VIDEO = 110
     CONNECT = 200
     UPLOAD_SPEC = 300
     FIND_SPEC = 400
+    OPEN_TCO = 450
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     user_id = Column(Integer, ForeignKey('user.id'), nullable=False)
