@@ -65,7 +65,8 @@ class GplFactory():
         return 0
 
     def find_header(self, sheet):    # Throws an exception if header not found
-        '''
+        ''' Look for table header to identify columns
+            Constants matter: column_headers, column_categories
         :param sheet: sheet object for specification
         :return: dictionary {'firstline': <first line of pricelist>, 'matching' : <categories to column mathching map>
         '''

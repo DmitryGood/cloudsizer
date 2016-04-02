@@ -11,6 +11,7 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from config import WorkConfig
 from specification.SpecFactory import SpecFactory
+from specification.BundleFactory import BundleFactory
 from model_cloudcalc import User, User_action  # database types
 from users.userRegistrator import UserSession
 
@@ -248,6 +249,19 @@ def logout():
     resp.set_cookie('userToken', '', expires =0)
     resp.set_cookie('userRole', '', expires =0)
     print ("Logging Response: ", resp)
+    return resp
+
+@app.route("/api/hyperflex/<model>", methods=['POST','GET'])
+def hyperflex_config(model):
+    print model
+    bf1 = BundleFactory('server/cloudsizer/data/HyperFlex_1_upload.xlsx')
+    bf2 = BundleFactory('server/cloudsizer/data/HyperFlex_2_upload.xlsx')
+    bf3 = BundleFactory('server/cloudsizer/data/HyperFlex_3_upload.xlsx')
+    bf1.extractBundle()
+    bf2.extractBundle()
+    bf3.extractBundle()
+    result = BundleFactory.combine_bundles_config([bf1, bf2, bf3])
+    resp = make_response(jsonify({'result' : True, 'data': result}), 200)
     return resp
 
 
