@@ -254,9 +254,14 @@ def logout():
 @app.route("/api/hyperflex/<model>", methods=['POST','GET'])
 def hyperflex_config(model):
     print model
-    bf1 = BundleFactory('server/cloudsizer/data/HyperFlex_1_upload.xlsx')
-    bf2 = BundleFactory('server/cloudsizer/data/HyperFlex_2_upload.xlsx')
-    bf3 = BundleFactory('server/cloudsizer/data/HyperFlex_3_upload.xlsx')
+    #basedir = os.path.abspath(os.path.dirname(__file__))
+    #bf1 = BundleFactory(basedir + '/data/Hyperflex_1_upload.xlsx')
+    #bf2 = BundleFactory(basedir + '/data/Hyperflex_2_upload.xlsx')
+    #bf3 = BundleFactory(basedir + '/data/Hyperflex_3_upload.xlsx')
+
+    bf1 = BundleFactory('server/cloudsizer/data/Hyperflex_1_upload.xlsx')
+    bf2 = BundleFactory('server/cloudsizer/data/Hyperflex_2_upload.xlsx')
+    bf3 = BundleFactory('server/cloudsizer/data/Hyperflex_3_upload.xlsx')
     bf1.extractBundle()
     bf2.extractBundle()
     bf3.extractBundle()

@@ -2,6 +2,7 @@ __author__ = 'slash'
 from specFileProcessors import xlsSheetProcessor, xlsxSheetProcessor
 from resourseProducts import remove_tags, price, ResourseFactory
 from exceptions import ValueError
+from openpyxl import Workbook
 
 
 class BundleFactory():
@@ -15,6 +16,7 @@ class BundleFactory():
     CAT_QUANTITY = 6
     CAT_PARAMETERS = 7
     CAT_VALUES = 8
+    CAT_TOTAL = 10
 
     # possible values for column headers
     column_headers = ['Level1',
@@ -361,3 +363,41 @@ class BundleFactory():
                         print "----- >>>> Relace key"
                         result[key] = conf[key]
         return result
+
+    def create_sheet_header(self, sheet, start, mapping, headers):
+        ''' Function creates headers for mapping
+            sheet - resulting sheet
+            start - line in which header will be created
+            mapping - dictionary for saving in format: category : column
+            headers - dict, saved in format: category : header name
+        '''
+        for key in mapping:
+            sheet.cell(row=start, column = mapping[key], value= headers[key])
+
+        return
+
+    def spec_to_worksheet(self, sheet, start, section, mapping, qty_items=1, total = False):
+        ''' Function saves specification to openpyxl worksheet
+            start - starting line
+            section - specification, list of dictionaries
+            mapping - dictionary for saving in format: category : column
+            qty_items - number of times we need this section
+            return: row - number of row next to last added row
+        '''
+        spec = self.bundle[section]['spec']
+        row = start
+        for line in spec:       # loop over specification lines
+            for key in mapping:    # loop over keys in mapping
+                if line.has_key(key):   # place to resulting file only existing keys
+                    if (key == BundleFactory.CAT_QUANTITY):
+                        result = line[key] * qty_items
+                    else:
+                        result = line[key]
+                    sheet.cell(row= row, column=mapping[key], value = result)
+            if (total):
+                sum = sheet.cell(row=row, column = mapping[BundleFactory.CAT_QUANTITY]).value * \
+                      sheet.cell(row=row, column = mapping[BundleFactory.CAT_PRICE]).value
+                sheet.cell(row=row, column = mapping[BundleFactory.CAT_TOTAL], value = sum)
+            row +=1     # next row
+
+        return row
