@@ -5,7 +5,7 @@ import os
 from flask import Flask, redirect, make_response
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug import secure_filename
-from flask import send_from_directory
+from flask import send_from_directory, send_file
 from flask import request, jsonify, json
 from sqlalchemy.orm.exc import NoResultFound
 
@@ -251,23 +251,139 @@ def logout():
     print ("Logging Response: ", resp)
     return resp
 
+
+
+''' The function returns configurations for bundle (C220 with Vmware Ent Plus is supported for now
+        Returns: array of possible configs for HX-220
+'''
 @app.route("/api/hyperflex/<model>", methods=['POST','GET'])
 def hyperflex_config(model):
     print model
+    user_session = UserSession(db.session, request)  # create user session
     #basedir = os.path.abspath(os.path.dirname(__file__))
     #bf1 = BundleFactory(basedir + '/data/Hyperflex_1_upload.xlsx')
     #bf2 = BundleFactory(basedir + '/data/Hyperflex_2_upload.xlsx')
     #bf3 = BundleFactory(basedir + '/data/Hyperflex_3_upload.xlsx')
 
-    bf1 = BundleFactory('server/cloudsizer/data/Hyperflex_1_upload.xlsx')
-    bf2 = BundleFactory('server/cloudsizer/data/Hyperflex_2_upload.xlsx')
-    bf3 = BundleFactory('server/cloudsizer/data/Hyperflex_3_upload.xlsx')
+    basedir = os.path.abspath(os.path.dirname(__file__))
+    print "Load Hyperflex config from directory: ", basedir
+
+    bf1 = BundleFactory(basedir + '/data/Hyperflex_1_upload.xlsx',"1")
+    bf2 = BundleFactory(basedir + '/data/Hyperflex_2_upload.xlsx',"2")
+    bf3 = BundleFactory(basedir + '/data/Hyperflex_3_upload.xlsx',"3")
     bf1.extractBundle()
     bf2.extractBundle()
     bf3.extractBundle()
     result = BundleFactory.combine_bundles_config([bf1, bf2, bf3])
     resp = make_response(jsonify({'result' : True, 'data': result}), 200)
+    user_session.setCookies(resp)
     return resp
+
+''' The function returns *.xlsx file for particular configuration
+    Params: {"BundleID" : ID, "bundleParams" : { "servers" : X, "memory" : Y}}
+    Result: specification file
+'''
+from openpyxl import Workbook       # remove after refactoring
+@app.route("/api/hyperflex/specification/<model>", methods=['POST','GET'])
+def hyperflex_specification(model):
+    #print model
+    print "Start spec processing", model
+    #print request
+    user_session = UserSession(db.session, request)  # create user session
+
+    jsonObject = request.json
+    #print jsonObject
+    bundleId = jsonObject['BundleID']
+    bundleParams = jsonObject['bundleParams']
+    basedir = os.path.abspath(os.path.dirname(__file__))
+    bf = BundleFactory.loadBundleByID(bundleId, basedir + "/data/")
+    bf.extractBundle()
+    wb1 = Workbook()
+    ws1 = wb1.create_sheet(title="Spec", index=0)
+    mapping1 = {BundleFactory.CAT_PN : 2, BundleFactory.CAT_QUANTITY : 3, BundleFactory.CAT_PRICE : 5, BundleFactory.CAT_TOTAL : 6}
+    headers1 = {BundleFactory.CAT_PN : "Part Number",
+           BundleFactory.CAT_QUANTITY : "Qty",
+           BundleFactory.CAT_PRICE : "Unit List Price",
+           BundleFactory.CAT_TOTAL : "Total list price"}
+    bf.create_sheet_header(ws1, 1, mapping1, headers1)
+    row = bf.spec_to_worksheet(ws1, 2, 'BASE', mapping1, 1 , True)
+    row = bf.spec_to_worksheet(ws1, row, 'OPTION', mapping1, bundleParams['servers'], True)
+    row = bf.spec_to_worksheet(ws1, row, 'ADDON', mapping1, bundleParams['memory'], True)
+
+    #filename = basedir + "/hyperflex_config/hx-" + str(user_session.getUserID()) + "-" + str(datetime.datetime.now().microsecond)+".xslx"
+    dir = basedir + "/hyperflex_config/"
+    file = "hx-" + str(user_session.getUserID()) + "-" + str(datetime.datetime.now().microsecond)+".xlsx"
+    filename = dir + file
+    print "Filename: ", filename
+    print dir, file
+    wb1.save(filename=filename)
+
+    #return send_file(filename, attachment_filename="hx-" + model+".xlsx")
+    return send_from_directory(dir,
+                               file)
+
+
+@app.route("/api/hyperflex/calculator", methods=['POST','GET'])
+def hyperflex_calculator():
+    user_session = UserSession(db.session, request)  # create user session
+
+    jsonObject = request.json
+    # print jsonObject
+    bundleId = jsonObject['BundleID']
+    bundleParams = jsonObject['bundleParams']
+
+    basedir = os.path.abspath(os.path.dirname(__file__))
+    print "Load Hyperflex config from directory: ", basedir
+    bf = BundleFactory.loadBundleByID(bundleId, basedir + "/data/")
+    bf.extractBundle()
+    wb1 = Workbook()
+    ws1 = wb1.create_sheet(title="Spec", index=0)
+    mapping1 = {BundleFactory.CAT_PN: 2, BundleFactory.CAT_NAME: 3, BundleFactory.CAT_QUANTITY : 4, BundleFactory.CAT_PRICE: 5,
+            BundleFactory.CAT_TOTAL: 6}
+    headers1 = {BundleFactory.CAT_PN: "Part Number",
+            BundleFactory.CAT_QUANTITY: "Qty",
+            BundleFactory.CAT_PRICE: "Unit List Price",
+            BundleFactory.CAT_TOTAL: "Total list price",
+            BundleFactory.CAT_NAME: "Description"}
+    bf.create_sheet_header(ws1, 1, mapping1, headers1)
+    row = bf.spec_to_worksheet(ws1, 2, 'BASE', mapping1, 1, True)
+    row = bf.spec_to_worksheet(ws1, row, 'OPTION', mapping1, bundleParams['servers'], True)
+    row = bf.spec_to_worksheet(ws1, row, 'ADDON', mapping1, bundleParams['memory'], True)
+
+    bf.create_sheet_header(ws1, row+2, {BundleFactory.CAT_TOTAL : 6}, {BundleFactory.CAT_TOTAL : "Estimate Total"})
+    basedir = os.path.abspath(os.path.dirname(__file__))
+
+    #filename = basedir + "/hyperflex_config/hx-" + str(user_session.getUserID()) + "-" + str(
+    #    datetime.datetime.now().microsecond) + ".xslx"
+
+    file_ending = str(user_session.getUserID()) + "-" + str(datetime.datetime.now().microsecond)
+
+    dest_filename = os.path.join(app.config['UPLOAD_FOLDER'], "hx-" + file_ending + ".xlsx")
+
+    print "Filename: ", dest_filename
+    wb1.save(filename=dest_filename)
+
+    # Load config to database
+    name = "Hyperflex" + file_ending
+    # Load specification to database
+    try:
+        print "Spec name: ", name
+        spec_factory = SpecFactory(dest_filename, specName=name)
+        print "specification factory created"
+        hash = spec_factory.uploadSpecToDatabase(db.session, user_session.getUserID())
+        print "Spec hash: '%s', return success" % hash
+        user_session.registerEvent(db.session, User_action.UPLOAD_SPEC, request,
+                                   data={'filename': dest_filename, 'hash': hash})  # register spec upload
+        resp = make_response(jsonify({'result': True, 'hash': hash}), 200)
+    except Exception as e:
+        print "Exceptions happens: ", e
+        resp = make_response({'result': False, 'message': 'Upload failed'}, 404)
+
+    user_session.setCookies(resp)
+    return resp
+
+
+    #return send_file(filename, attachment_filename="hx-" + model + ".xlsx")
 
 
 ## -------------- Server start

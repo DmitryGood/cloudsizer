@@ -17,8 +17,8 @@ class BaseConfig(object):
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     UPLOAD_FOLDER = basedir+ '/upload'
     ALLOWED_EXTENSIONS = set(['xls', 'xlsx'])
-    #STATIC_FOLDER = basedir[:basedir.rfind('/')] + '/../site'
-    STATIC_FOLDER = basedir[:basedir.rfind('/')] + '/site'
+    STATIC_FOLDER = basedir[:basedir.rfind('/')] + '/../site'
+    #STATIC_FOLDER = basedir[:basedir.rfind('/')] + '/site'
 
 
 class WorkConfig(BaseConfig):

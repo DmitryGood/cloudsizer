@@ -3,6 +3,8 @@ from specFileProcessors import xlsSheetProcessor, xlsxSheetProcessor
 from resourseProducts import remove_tags, price, ResourseFactory
 from exceptions import ValueError
 from openpyxl import Workbook
+import hashlib
+import datetime
 
 
 class BundleFactory():
@@ -84,14 +86,14 @@ class BundleFactory():
     ## ---------------- Private methods end ---------
 
     ## ------ Public method
-    def __init__(self, filename, specTag=None):
+    def __init__(self, filename, bundlID=None):
         self.bundle = None
         self.filename = filename
-        if (specTag == None or specTag ==''):
+        if (bundlID == None or bundlID ==''):
 
-            self.tag ='def'         # just some kind of default tag
+            self.id =hashlib.sha1(datetime.datetime.now().ctime()).hexdigest()         # just some kind of default tag
         else:
-            self.tag = remove_tags(specTag)       # remove special symbols
+            self.id = remove_tags(bundlID)       # remove special symbols
         type = filename[filename.rfind('.')+1:]     # get file extension
         try:
             if (type == 'xls'):
@@ -333,6 +335,7 @@ class BundleFactory():
                 'servers' : i,
                 'price' : price,
                 'config' : new_conf,
+                'bundleID' : self.id,
                 'memoryLimit' : self.bundle['ADDON']['limit'] * i,
                 'memorySize' : self.bundle['ADDON']['size'],
                 'memoryCost' : self.bundle['ADDON']['cost']
@@ -384,6 +387,7 @@ class BundleFactory():
             qty_items - number of times we need this section
             return: row - number of row next to last added row
         '''
+        print self.bundle
         spec = self.bundle[section]['spec']
         row = start
         for line in spec:       # loop over specification lines
@@ -401,3 +405,12 @@ class BundleFactory():
             row +=1     # next row
 
         return row
+
+    @staticmethod
+    def loadBundleByID(bundlID, base_path="../data/"):
+        ''' This function loads bundle from disk by it's ID number
+        '''
+
+        filename = base_path + "Hyperflex_" + str(bundlID) + "_upload.xlsx"
+        bundl = BundleFactory(filename)
+        return bundl

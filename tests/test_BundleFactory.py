@@ -1,6 +1,6 @@
 __author__ = 'slash'
 from specification.BundleFactory import BundleFactory
-from openpyxl import Workbook, worksheet
+from openpyxl import Workbook
 
 bf1 = BundleFactory('../data/HyperFlex_1_upload.xlsx')
 bf2 = BundleFactory('../data/HyperFlex_2_upload.xlsx')
@@ -119,4 +119,11 @@ row = bf1.spec_to_worksheet(ws1, row, 'ADDON', mapping2, 20)
 
 
 wb1.save(filename="test_workbook_upload.xlsx")
+
+bf4= BundleFactory.loadBundleByID(2, '../data/')
+bf4.extractBundle()
+
+print "------- Bundle extraction result #4 "
+print bf4.bundle
+
 
