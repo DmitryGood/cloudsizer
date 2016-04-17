@@ -271,17 +271,30 @@ class BundleFactory():
         ###print "Config parameters: ", conf_param
         cpu_param = self.getConfigParameters(option_parameters, "cpu_")
 
-        # look for ADDON section
-        addonLine = self.lookForPart(row, 'OPTION_ADDON', 'MEMORY')
-        if (not addonLine):
-            raise ValueError('Can\'t find ADDON section')
-        (row, addonSpec) = self.extractSpec(self.sheet, addonLine, self.mapping)
+        # look for ADDON1 section - MEMORY
+        addonLine1 = self.lookForPart(row, 'OPTION_ADDON1', 'MEMORY')
+        if (not addonLine1):
+            raise ValueError('Can\'t find ADDON1 section')
+        (row, addonSpec1) = self.extractSpec(self.sheet, addonLine1, self.mapping)
         # row now contains end line of ADDON section
         # addonSpec now contains spec
         # look for addon parameters
-        addon_parameters = self.extractParameters(addonLine, row)
-        if (not option_parameters):
-            raise ValueError('Can\'t find ADDON parameters')
+        addon_parameters1 = self.extractParameters(addonLine1, row)
+        if (not addon_parameters1):
+            raise ValueError('Can\'t find ADDON1 parameters')
+
+        # look for ADDON2 section - CABLE
+        addonLine2 = self.lookForPart(row, 'OPTION_ADDON2', 'CABLE')
+        if (not addonLine2):
+            raise ValueError('Can\'t find ADDON2 section')
+        (row, addonSpec2) = self.extractSpec(self.sheet, addonLine2, self.mapping)
+        # row now contains end line of ADDON section
+        # addonSpec now contains spec
+        # look for addon parameters
+        addon_parameters2 = self.extractParameters(addonLine2, row)
+        if (not addon_parameters2):
+            raise ValueError('Can\'t find ADDON1 parameters')
+
         #####print "Addon parameter: ", addon_parameters['limit']
         # lets create the final object
         addon_size = 32
@@ -308,13 +321,20 @@ class BundleFactory():
         }
 
 
-        result['ADDON'] = {
+        result['ADDON1'] = {
             'name' : 'MEMORY',
-            'spec' : addonSpec,
-            'cost': self.getSpecPrice(addonSpec),
-            'limit' : int(addon_parameters['limit']),
+            'spec' : addonSpec1,
+            'cost': self.getSpecPrice(addonSpec1),
+            'limit' : int(addon_parameters1['limit']),
             'size' : int(addon_size)
         }
+        result['ADDON2'] = {
+            'name': 'CABLE',
+            'spec': addonSpec2,
+            'cost': self.getSpecPrice(addonSpec2),
+            'limit': int(addon_parameters2['limit'])
+        }
+
 
         self.bundle = result        ## Save bundle object for future use
 
@@ -337,9 +357,9 @@ class BundleFactory():
                 'price' : price,
                 'config' : new_conf,
                 'bundleID' : self.id,
-                'memoryLimit' : self.bundle['ADDON']['limit'] * i,
-                'memorySize' : self.bundle['ADDON']['size'],
-                'memoryCost' : self.bundle['ADDON']['cost']
+                'memoryLimit' : self.bundle['ADDON1']['limit'] * i,
+                'memorySize' : self.bundle['ADDON1']['size'],
+                'memoryCost' : self.bundle['ADDON1']['cost']
             }
 
             if bundle_option.has_key('cpu'):
@@ -409,7 +429,7 @@ class BundleFactory():
 
     def get_bundle_parameters(self, servers, memory):
         config = self.bundle['OPTION']['config']
-        addon = self.bundle['ADDON']
+        addon = self.bundle['ADDON1']
         parameters = {
             ResourseFactory.PROD_CPU : config['cpu'] * servers,
             ResourseFactory.PROD_MEM : config['mem'] * servers + addon['size'] * memory,

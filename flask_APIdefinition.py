@@ -313,7 +313,8 @@ def hyperflex_specification(model):
     bf.create_sheet_header(ws1, 1, mapping1, headers1)
     row = bf.spec_to_worksheet(ws1, 2, 'BASE', mapping1, 1 , True)
     row = bf.spec_to_worksheet(ws1, row, 'OPTION', mapping1, bundleParams['servers'], True)
-    row = bf.spec_to_worksheet(ws1, row, 'ADDON', mapping1, bundleParams['memory'], True)
+    row = bf.spec_to_worksheet(ws1, row, 'ADDON1', mapping1, bundleParams['memory'], True)
+    row = bf.spec_to_worksheet(ws1, row, 'ADDON2', mapping1, bundleParams['servers'], True)
     # Create human-readable worksheet
     ws2 = wb1.create_sheet(title="Specification", index=1)
     mapping2 = {BundleFactory.CAT_PN: 2,
@@ -329,7 +330,9 @@ def hyperflex_specification(model):
     bf.create_sheet_header(ws2, 1, mapping2, headers2)
     row = bf.spec_to_worksheet(ws2, 2, 'BASE', mapping2, 1, True)
     row = bf.spec_to_worksheet(ws2, row, 'OPTION', mapping2, bundleParams['servers'], True)
-    row = bf.spec_to_worksheet(ws2, row, 'ADDON', mapping2, bundleParams['memory'], True)
+    row = bf.spec_to_worksheet(ws2, row, 'ADDON1', mapping2, bundleParams['memory'], True)
+    row = bf.spec_to_worksheet(ws2, row, 'ADDON2', mapping2, bundleParams['servers'], True)
+
     # Now wb1 contains two worksheets
     #filename = basedir + "/hyperflex_config/hx-" + str(user_session.getUserID()) + "-" + str(datetime.datetime.now().microsecond)+".xslx"
     hx_dir = "/hyperflex_config/"
