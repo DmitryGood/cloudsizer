@@ -420,7 +420,7 @@ class BundleFactory():
                         result = line[key]
                     sheet.cell(row= row, column=mapping[key], value = result)
             if (total):
-                sum = sheet.cell(row=row, column = mapping[BundleFactory.CAT_QUANTITY]).value * \
+                sum = int (sheet.cell(row=row, column = mapping[BundleFactory.CAT_QUANTITY]).value) * \
                       sheet.cell(row=row, column = mapping[BundleFactory.CAT_PRICE]).value
                 sheet.cell(row=row, column = mapping[BundleFactory.CAT_TOTAL], value = sum)
             row +=1     # next row
@@ -431,11 +431,11 @@ class BundleFactory():
         config = self.bundle['OPTION']['config']
         addon = self.bundle['ADDON1']
         parameters = {
-            ResourseFactory.PROD_CPU : config['cpu'] * servers,
-            ResourseFactory.PROD_MEM : config['mem'] * servers + addon['size'] * memory,
-            ResourseFactory.PROD_HDD : config['hdd'] * servers / 2,
+            ResourseFactory.PROD_CPU : int(config['cpu']) * int(servers),
+            ResourseFactory.PROD_MEM : int(config['mem']) * int(servers) + int(addon['size']) * int(memory),
+            ResourseFactory.PROD_HDD : int(config['hdd']) * int(servers) / 2,
             ResourseFactory.PROD_SSD : 0,
-            ResourseFactory.PROD_SOCKET : servers * 2,
+            ResourseFactory.PROD_SOCKET : int(servers) * 2,
             'optimization' : 100,
             'discount' : 64,
             'message' : 'info',

@@ -379,7 +379,7 @@ def hyperflex_calculator():
     bf.create_sheet_header(ws1, 1, mapping1, headers1)
     row = bf.spec_to_worksheet(ws1, 2, 'BASE', mapping1, 1, True)
     row = bf.spec_to_worksheet(ws1, row, 'OPTION', mapping1, bundleParams['servers'], True)
-    row = bf.spec_to_worksheet(ws1, row, 'ADDON', mapping1, bundleParams['memory'], True)
+    row = bf.spec_to_worksheet(ws1, row, 'ADDON1', mapping1, bundleParams['memory'], True)
 
     bf.create_sheet_header(ws1, row+2, {BundleFactory.CAT_TOTAL : 6}, {BundleFactory.CAT_TOTAL : "Estimate Total"})
     basedir = os.path.abspath(os.path.dirname(__file__))
