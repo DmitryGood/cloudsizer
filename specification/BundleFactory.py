@@ -5,6 +5,7 @@ from exceptions import ValueError
 from openpyxl import Workbook
 import hashlib
 import datetime
+from resourseProducts import ResourseFactory
 
 
 class BundleFactory():
@@ -405,6 +406,22 @@ class BundleFactory():
             row +=1     # next row
 
         return row
+
+    def get_bundle_parameters(self, servers, memory):
+        config = self.bundle['OPTION']['config']
+        addon = self.bundle['ADDON']
+        parameters = {
+            ResourseFactory.PROD_CPU : config['cpu'] * servers,
+            ResourseFactory.PROD_MEM : config['mem'] * servers + addon['size'] * memory,
+            ResourseFactory.PROD_HDD : config['hdd'] * servers / 2,
+            ResourseFactory.PROD_SSD : 0,
+            ResourseFactory.PROD_SOCKET : servers * 2,
+            'optimization' : 100,
+            'discount' : 64,
+            'message' : 'info',
+            'message_text': "<p style='margin-top: 10px'>This is <b>Hyperflex <span class='glyphicon glyphicon-registration-mark'> </span></b> configuration. <br>The numbers of resources shown are the actual amount available on Hyperflex for user virtual machines</p>"
+        }
+        return parameters
 
     @staticmethod
     def loadBundleByID(bundlID, base_path="../data/"):

@@ -91,8 +91,9 @@ class SpecFactory():
     ## ---------------- Private methods end ---------
 
     ## ------ Public method
-    def __init__(self, filename, specName=None, hash=None):
+    def __init__(self, filename, specName=None, hash=None, parameters=None):
         self.filename = filename
+        self.parameters = parameters
         if (specName == None or specName ==''):
             tmp = filename[filename.rfind('/')+1:]    # use name of the file as a Spec name
             self.name =re.search('.*?_(.+)(?=.xlsx*?)', tmp).group(1)
@@ -173,6 +174,7 @@ class SpecFactory():
                 spec.filename =self.filename
                 spec.name = self.name
                 spec.tokenized = tokenizedSpec
+                spec.parameters = self.parameters
                 spec.user_id = user_id
                 session.commit()
             except:
@@ -180,7 +182,7 @@ class SpecFactory():
 
         except:
             try:
-                spec = Specification(self.filename, self.name, tokenizedSpec, self.spec_hash, user_id=user_id)
+                spec = Specification(self.filename, self.name, tokenizedSpec, self.spec_hash, user_id=user_id, parameters=self.parameters)
                 session.add(spec)
                 session.commit()
                 print 'added'
@@ -206,6 +208,22 @@ class SpecFactory():
             raise NoResultFound('Specification with hash: \'%s\' isn\'t exist'%hash)
         #print "   >>>> Success!!!"
         return spec.tokenized
+
+    @staticmethod
+    def getSpecParameters(session, hash):
+        ''' Function retrieve tokenized specification from database
+            :param session: DB session
+            :param hash: Spec hash
+            :return: 'parameters' field or None
+            '''
+        # print "retrieve specification from database"
+        try:
+            spec = session.query(Specification).filter(Specification.hash == hash).one()
+        except:
+            print '      >>>>> can\'t load spec from DB'
+            raise NoResultFound('Specification with hash: \'%s\' isn\'t exist' % hash)
+        # print "   >>>> Success!!!"
+        return spec.parameters
 
     @staticmethod
     def getSpecName(session, hash):
@@ -292,6 +310,10 @@ class SpecFactory():
         name = SpecFactory.getSpecName(session, hash)
 
         return_data.update({'stat' : stat, 'spec': result, 'price' : total_price, 'name' :name})
+        parameters = SpecFactory.getSpecParameters(session, hash)       # load from database specification parameters
+        if parameters != None:
+            return_data.update({'parameters': parameters})
+
         #print return_data
         return return_data
 

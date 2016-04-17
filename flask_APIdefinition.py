@@ -41,6 +41,7 @@ def index():
 
 @app.route('/<path:path>', methods=['GET'])
 def static_site(path):
+    print "Static file request: ", path
     return app.send_static_file(path), 200
 
 ''' ------------ API stuff begins
@@ -105,6 +106,7 @@ def upload_file():
 def api_upload_file():
     file = request.files['file']
     user_session = UserSession(db.session, request)         # create user session
+    print "Upload request: ", file
     try:                                # Try to get name from request
         param = request.form['data']
         jsonObject = json.loads(param)
@@ -121,6 +123,7 @@ def api_upload_file():
         # add to filename user's cookies
         filename = secure_filename(str(user_session.getUserID()) + '_'+file.filename)             # new secure filename with cookie string
         dest_filename = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        print "Upload file: ", dest_filename
         # save specification to disk
         file.save(dest_filename)
         # calculate the hash
@@ -298,8 +301,10 @@ def hyperflex_specification(model):
     basedir = os.path.abspath(os.path.dirname(__file__))
     bf = BundleFactory.loadBundleByID(bundleId, basedir + "/data/")
     bf.extractBundle()
+    # Create workbook
     wb1 = Workbook()
-    ws1 = wb1.create_sheet(title="Spec", index=0)
+    # Create worksheet for CCW
+    ws1 = wb1.create_sheet(title="Spec_for_CCW", index=0)
     mapping1 = {BundleFactory.CAT_PN : 2, BundleFactory.CAT_QUANTITY : 3, BundleFactory.CAT_PRICE : 5, BundleFactory.CAT_TOTAL : 6}
     headers1 = {BundleFactory.CAT_PN : "Part Number",
            BundleFactory.CAT_QUANTITY : "Qty",
@@ -309,19 +314,42 @@ def hyperflex_specification(model):
     row = bf.spec_to_worksheet(ws1, 2, 'BASE', mapping1, 1 , True)
     row = bf.spec_to_worksheet(ws1, row, 'OPTION', mapping1, bundleParams['servers'], True)
     row = bf.spec_to_worksheet(ws1, row, 'ADDON', mapping1, bundleParams['memory'], True)
-
+    # Create human-readable worksheet
+    ws2 = wb1.create_sheet(title="Specification", index=1)
+    mapping2 = {BundleFactory.CAT_PN: 2,
+                BundleFactory.CAT_NAME: 3,
+                BundleFactory.CAT_QUANTITY: 4,
+                BundleFactory.CAT_PRICE: 5,
+                BundleFactory.CAT_TOTAL: 6}
+    headers2 = {BundleFactory.CAT_PN: "Part Number",
+                BundleFactory.CAT_NAME: "Description",
+                BundleFactory.CAT_QUANTITY: "Qty",
+                BundleFactory.CAT_PRICE: "Unit List Price",
+                BundleFactory.CAT_TOTAL: "Total list price"}
+    bf.create_sheet_header(ws2, 1, mapping2, headers2)
+    row = bf.spec_to_worksheet(ws2, 2, 'BASE', mapping2, 1, True)
+    row = bf.spec_to_worksheet(ws2, row, 'OPTION', mapping2, bundleParams['servers'], True)
+    row = bf.spec_to_worksheet(ws2, row, 'ADDON', mapping2, bundleParams['memory'], True)
+    # Now wb1 contains two worksheets
     #filename = basedir + "/hyperflex_config/hx-" + str(user_session.getUserID()) + "-" + str(datetime.datetime.now().microsecond)+".xslx"
-    dir = basedir + "/hyperflex_config/"
+    hx_dir = "/hyperflex_config/"
+    dir = basedir + hx_dir
     file = "hx-" + str(user_session.getUserID()) + "-" + str(datetime.datetime.now().microsecond)+".xlsx"
     filename = dir + file
     print "Filename: ", filename
     print dir, file
     wb1.save(filename=filename)
-
+    resp = make_response(jsonify({'result': True, 'file_url': hx_dir + file}), 200)
+    user_session.setCookies(resp)
     #return send_file(filename, attachment_filename="hx-" + model+".xlsx")
-    return send_from_directory(dir,
-                               file)
+    #return send_from_directory(dir, file)
+    return resp
 
+@app.route("/hyperflex_config/<file>", methods=['GET'])
+def download_hyperflex_config(file):
+    basedir = os.path.abspath(os.path.dirname(__file__))
+    dir = basedir + "/hyperflex_config/"
+    return send_from_directory(dir, file)
 
 @app.route("/api/hyperflex/calculator", methods=['POST','GET'])
 def hyperflex_calculator():
@@ -366,9 +394,11 @@ def hyperflex_calculator():
     # Load config to database
     name = "Hyperflex" + file_ending
     # Load specification to database
+    parameters = bf.get_bundle_parameters(bundleParams['servers'], bundleParams['memory'])
     try:
         print "Spec name: ", name
-        spec_factory = SpecFactory(dest_filename, specName=name)
+        print "Spec parameters: ", parameters
+        spec_factory = SpecFactory(dest_filename, specName=name, parameters=parameters)
         print "specification factory created"
         hash = spec_factory.uploadSpecToDatabase(db.session, user_session.getUserID())
         print "Spec hash: '%s', return success" % hash

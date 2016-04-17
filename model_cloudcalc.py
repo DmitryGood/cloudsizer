@@ -50,14 +50,16 @@ class Specification(Base):
     filename = Column(String(250), nullable=False)
     name = Column(String(100))
     tokenized = Column(PickleType, nullable=False)
+    parameters = Column(PickleType, nullable=True)      # Specification parameters (CPU, MEM, comment, initial value for calculator)
     hash = Column(String(100))
     user_id = Column(Integer, ForeignKey('user.id'), nullable=False)
     user = relationship('User', uselist = False)
 
-    def __init__(self, filename, name, tokenized, hash, user_id =None, user = None):
+    def __init__(self, filename, name, tokenized, hash, user_id =None, user = None, parameters = None):
         self.filename = filename
         self.name = name
         self.tokenized = tokenized
+        self.parameters = parameters
         self.hash = hash
         if (user_id):
             self.user_id = user_id
